@@ -1,0 +1,63 @@
+AddDefaultCharset UTF-8
+
+RewriteEngine on
+RewriteBase /
+
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+RewriteRule ^(.*)$ index.php
+
+#RewriteCond %{HTTPS} off
+#RewriteCond %{HTTP:X-Forwarded-Proto} !https
+#RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+
+ErrorDocument 403 https://sell-logs.ru
+#RewriteRule \.(jpe?g|bmp|gif|png|css|zip|pdf|txt|doc)$ — [NC,F,L]
+
+#<Files log.txt>
+#deny from all
+#</Files>
+<FilesMatch "\.txt$">
+  Order Deny,Allow
+  Deny from all
+</FilesMatch>
+
+FileETag MTime Size
+<ifmodule mod_expires.c>
+<filesmatch ".(jpg|jpeg|gif|png|ico|css|js)$">
+ExpiresActive on
+ExpiresDefault "access plus 1 month"
+</filesmatch>
+</ifmodule>
+
+<IfModule mod_headers.c>
+    # Serve gzip compressed CSS files if they exist 
+    # and the client accepts gzip.
+    RewriteCond "%{HTTP:Accept-encoding}" "gzip"
+    RewriteCond "%{REQUEST_FILENAME}\.gz" -s
+    RewriteRule "^(.*)\.css" "$1\.css\.gz" [QSA]
+
+    # Serve gzip compressed JS files if they exist 
+    # and the client accepts gzip.
+    RewriteCond "%{HTTP:Accept-encoding}" "gzip"
+    RewriteCond "%{REQUEST_FILENAME}\.gz" -s
+    RewriteRule "^(.*)\.js" "$1\.js\.gz" [QSA]
+
+
+    # Serve correct content types, and prevent mod_deflate double gzip.
+    RewriteRule "\.css\.gz$" "-" [T=text/css,E=no-gzip:1]
+    RewriteRule "\.js\.gz$" "-" [T=text/javascript,E=no-gzip:1]
+
+
+    <FilesMatch "(\.js\.gz|\.css\.gz)$">
+      # Serve correct encoding type.
+      Header append Content-Encoding gzip
+
+      # Force proxies to cache gzipped & 
+      # non-gzipped css/js files separately.
+      Header append Vary Accept-Encoding
+    </FilesMatch>
+</IfModule>
